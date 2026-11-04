@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>악보 모으기</title>
+</head><body>
+<style>
+:root{
+  --초록:#5ADC8C; --빨강:#FF5C5C; --노랑:#FFD640; --회색:#96A0B4;
+  --바탕:#f6f7f9; --판:#ffffff; --글:#1b1f24; --선:#dfe3e8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --바탕:#14171a; --판:#1d2126; --글:#eef1f4; --선:#333a42;
+  }
+}
+:root[data-theme="dark"]{
+  --바탕:#14171a; --판:#1d2126; --글:#eef1f4; --선:#333a42;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;padding:0 16px 48px;background:var(--바탕);color:var(--글);
+  font-family:"맑은 고딕","Malgun Gothic",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+  line-height:1.6;
+}
+.싸개{max-width:860px;margin:0 auto}
+header{text-align:center;padding:28px 0 18px}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.5px}
+header p{margin:0;color:var(--회색);font-size:14px}
+
+.시험{background:#fff3cd;border:1px solid #ffd640;border-radius:12px;padding:14px 16px;
+  margin:0 0 14px;font-size:14px;color:#5a4500;line-height:1.7}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .시험{background:#33290a;border-color:#8a7320;color:#ffe9a8}
+}
+:root[data-theme="dark"] .시험{background:#33290a;border-color:#8a7320;color:#ffe9a8}
+.시험 b{color:inherit}
+
+.판{background:var(--판);border:1px solid var(--선);border-radius:14px;padding:18px;margin-bottom:14px}
+.판 h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.번호{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;background:var(--초록);color:#06301a;
+  font-size:13px;font-weight:700;flex:none}
+
+button{
+  font:inherit;font-weight:600;border:1px solid var(--선);background:var(--판);color:var(--글);
+  border-radius:10px;padding:11px 16px;cursor:pointer;transition:.12s;
+}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.주{background:var(--초록);border-color:var(--초록);color:#06301a}
+.경고{background:var(--빨강);border-color:var(--빨강);color:#fff}
+.강조{background:var(--노랑);border-color:var(--노랑);color:#3a2c00}
+.줄{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+label.설정{display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0}
+label.설정 span:first-child{min-width:140px;color:var(--회색)}
+input[type=number]{font:inherit;width:84px;padding:7px 9px;border:1px solid var(--선);
+  border-radius:8px;background:var(--바탕);color:var(--글)}
+
+#떨구기{
+  border:2px dashed var(--선);border-radius:12px;padding:28px 16px;text-align:center;
+  color:var(--회색);cursor:pointer;font-size:15px;
+}
+#떨구기.위{border-color:var(--초록);background:rgba(90,220,140,.08);color:var(--글)}
+
+#셈{font-size:22px;font-weight:700;text-align:center;margin:14px 0 4px}
+#알림{text-align:center;font-size:13px;color:var(--회색);min-height:20px}
+
+#목록{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:12px}
+.칸{position:relative;border:1px solid var(--선);border-radius:10px;overflow:hidden;background:var(--바탕)}
+.칸 img{width:100%;display:block;aspect-ratio:4/3;object-fit:contain;background:#fff}
+.칸 .쪽{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.65);color:#fff;
+  font-size:11px;padding:2px 7px;border-radius:20px}
+.칸 .버림{position:absolute;top:5px;right:5px;width:26px;height:26px;padding:0;
+  border-radius:50%;background:var(--빨강);color:#fff;border:none;font-size:15px;line-height:1}
+
+#고르개{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99;display:none;
+  flex-direction:column;align-items:center;justify-content:center;padding:12px}
+#고르개.열림{display:flex}
+#고르개 p{color:#fff;margin:0 0 10px;font-size:15px;text-align:center}
+#무대{position:relative;max-width:100%;max-height:72vh;touch-action:none}
+#무대 img{max-width:100%;max-height:72vh;display:block;user-select:none;-webkit-user-drag:none}
+#네모{position:absolute;border:3px solid var(--초록);background:rgba(90,220,140,.14);
+  display:none;pointer-events:none}
+#고르개 .줄{margin-top:14px}
+
+.도움{font-size:13px;color:var(--회색);margin:8px 0 0}
+.딱지{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
+  background:var(--회색);color:#fff;vertical-align:middle;margin-left:6px}
+.딱지.ok{background:var(--초록);color:#06301a}
+.딱지.no{background:var(--빨강)}
+footer{text-align:center;font-size:12px;color:var(--회색);padding:22px 8px;line-height:1.8}
+video{display:none}
+</style>
+
+<div class="싸개">
+
+<header>
+  <h1>악보 모으기</h1>
+  <p>화면에 보이는 악보를 모아 PDF 한 장으로 만듭니다</p>
+</header>
+
+
+<div class="판">
+  <h2><span class="번호">1</span>악보 장면 모으기</h2>
+
+  <div id="떨구기">
+    📷 <b>사진을 여기에 올리세요</b><br>
+    <span style="font-size:13px">폰에서 찍은 화면 사진도 됩니다 · 여러 장 한꺼번에</span>
+  </div>
+  <input type="file" id="파일" accept="image/*" multiple hidden>
+
+  <div class="줄" style="margin-top:12px">
+    <button id="공유단추">🖥 화면 보면서 자동으로 모으기<span class="딱지" id="공유딱지">확인 중</span></button>
+    <button id="멈춤단추" class="경고" disabled>■ 멈춤</button>
+  </div>
+
+  <label class="설정"><span>몇 초마다 볼까요</span>
+    <input type="number" id="간격" value="1.5" min="0.5" step="0.5"><span>초</span></label>
+  <label class="설정"><span>얼마나 달라지면</span>
+    <input type="number" id="민감도" value="1.5" min="0.2" step="0.1"><span>% 이상</span></label>
+  <p class="도움">악보는 1.5 그대로 두시면 됩니다. 숫자가 작을수록 많이 모읍니다.
+  같은 장면이 여러 장 생기면 숫자를 올리고, 새 악보를 건너뛰면 내리세요.</p>
+
+  <div id="셈">모은 장면 0 장</div>
+  <div id="알림"></div>
+</div>
+
+<div class="판">
+  <h2><span class="번호">2</span>악보만 남기기</h2>
+  <div class="줄">
+    <button id="크롭단추">✂ 자를 자리 정하기</button>
+    <button id="크롭풀기">되돌리기</button>
+    <span id="크롭글" style="font-size:14px;color:var(--회색)">아직 안 정했습니다</span>
+  </div>
+  <p class="도움">첫 장에서 악보 둘레에 네모를 한 번 그으면 <b>모든 장이 같은 자리로</b> 잘립니다.
+  유튜버 얼굴·자막·구독 단추가 빠지면 악보 인식이 훨씬 잘 됩니다.</p>
+</div>
+
+<div class="판">
+  <h2><span class="번호">3</span>확인하고 저장</h2>
+  <div class="줄">
+    <button id="저장단추" class="강조">📄 PDF로 저장</button>
+    <button id="비우기">모두 지우기</button>
+  </div>
+  <p class="도움">저장한 PDF를 <b>Audiveris</b>에 넣으면 고칠 수 있는 악보가 됩니다.</p>
+  <div id="목록"></div>
+</div>
+
+<footer>
+  <b>이 도구는 인터넷으로 아무것도 주고받지 않습니다.</b> 사진은 이 기기 안에만 있습니다.<br>
+  개인 연습용입니다. 만든 악보를 올리거나 나눠주거나 팔지 마세요 (저작권법 제30조).<br>
+  60AI만들기
+</footer>
+</div>
+
+<div id="고르개">
+  <p>악보 둘레를 손가락이나 마우스로 끌어서 네모를 그리세요</p>
+  <div id="무대"><img id="본보기" alt=""><div id="네모"></div></div>
+  <div class="줄">
+    <button id="크롭확인" class="주">이 자리로 자르기</button>
+    <button id="크롭취소">취소</button>
+  </div>
+</div>
+
+<video id="영상" playsinline muted></video>
+
+<script>
+(function(){
+"use strict";
+
+var 장면 = [];
+var 자를자리 = null;
+var 공유흐름 = null, 반복 = null, 앞작은 = null;
+
+var $ = function(id){ return document.getElementById(id); };
+var 셈 = $("셈"), 알림 = $("알림"), 목록 = $("목록");
+
+function 말(s){ 알림.textContent = s; }
+function 지금(){ var d=new Date(); return d.toTimeString().slice(0,8); }
+
+/* 악보는 거의 흰 종이다. 작게 줄여 「평균 밝기」를 재면 음표가 사라져
+   완전히 다른 악보도 0.9% 밖에 안 나온다 (11-04 실측).
+   그래서 160x120 으로 보고, 「달라진 픽셀이 몇 %인가」로 센다. */
+function 작게(캔){
+  var c = document.createElement("canvas");
+  c.width = 160; c.height = 120;
+  var g = c.getContext("2d");
+  g.drawImage(캔, 0, 0, 160, 120);
+  var d = g.getImageData(0,0,160,120).data;
+  var n = 160*120, a = new Uint8Array(n);
+  for(var i=0,j=0;j<n;i+=4,j++) a[j] = (d[i]+d[i+1]+d[i+2])/3;
+  return a;
+}
+function 차이(a, b){
+  if(!a || !b) return 100;
+  var 센 = 0;
+  for(var i=0;i<a.length;i++) if(Math.abs(a[i]-b[i]) > 25) 센++;
+  return 센 / a.length * 100;
+}
+
+function 담기(캔, 검사){
+  var 작 = 작게(캔);
+  if(검사){
+    var d = 차이(앞작은, 작);
+    var 한계 = parseFloat($("민감도").value) || 1.5;
+    if(d < 한계){ 말(지금()+"  같은 장면 — 건너뜀 (차이 "+d.toFixed(1)+"%)"); return false; }
+    말(지금()+"  새 장면을 담았습니다 (차이 "+d.toFixed(1)+"%)");
+  }
+  앞작은 = 작;
+  장면.push({캔:캔, 쓸것:true});
+  그리기();
+  return true;
+}
+
+function 자른캔(원){
+  if(!자를자리) return 원;
+  var x = Math.round(자를자리.x*원.width), y = Math.round(자를자리.y*원.height);
+  var w = Math.round(자를자리.w*원.width), h = Math.round(자를자리.h*원.height);
+  if(w<8||h<8) return 원;
+  var c = document.createElement("canvas");
+  c.width=w; c.height=h;
+  c.getContext("2d").drawImage(원, x,y,w,h, 0,0,w,h);
+  return c;
+}
+
+function 그리기(){
+  셈.textContent = "모은 장면 " + 장면.length + " 장";
+  목록.innerHTML = "";
+  장면.forEach(function(s, i){
+    var 칸 = document.createElement("div"); 칸.className="칸";
+    var img = document.createElement("img");
+    img.src = 자른캔(s.캔).toDataURL("image/jpeg", 0.6);
+    var 쪽 = document.createElement("span"); 쪽.className="쪽"; 쪽.textContent = (i+1);
+    var 버 = document.createElement("button"); 버.className="버림"; 버.textContent="×";
+    버.title = "이 장면 버리기";
+    버.onclick = function(){ 장면.splice(i,1); 그리기(); };
+    칸.appendChild(img); 칸.appendChild(쪽); 칸.appendChild(버);
+    목록.appendChild(칸);
+  });
+}
+
+var 떨구기 = $("떨구기"), 파일칸 = $("파일");
+떨구기.onclick = function(){ 파일칸.click(); };
+["dragenter","dragover"].forEach(function(e){
+  떨구기.addEventListener(e, function(ev){ ev.preventDefault(); 떨구기.classList.add("위"); });
+});
+["dragleave","drop"].forEach(function(e){
+  떨구기.addEventListener(e, function(ev){ ev.preventDefault(); 떨구기.classList.remove("위"); });
+});
+떨구기.addEventListener("drop", function(ev){ 받기(ev.dataTransfer.files); });
+파일칸.onchange = function(){ 받기(파일칸.files); 파일칸.value=""; };
+
+function 받기(목록파일){
+  var 들 = Array.prototype.slice.call(목록파일)
+    .filter(function(f){ return /^image\//.test(f.type); })
+    .sort(function(a,b){ return a.name.localeCompare(b.name, "ko", {numeric:true}); });
+  if(!들.length){ 말("그림 파일이 아닙니다"); return; }
+  말(들.length + "장을 읽는 중 …");
+  var 남 = 들.length;
+  들.forEach(function(f, 순){
+    var img = new Image();
+    img.onload = function(){
+      var c = document.createElement("canvas");
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext("2d").drawImage(img, 0, 0);
+      장면.push({캔:c, 쓸것:true, 순:순});
+      if(--남 === 0){
+        장면.sort(function(a,b){ return (a.순===undefined?1e9:a.순) - (b.순===undefined?1e9:b.순); });
+        그리기(); 말(들.length + "장을 담았습니다");
+      }
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = function(){ if(--남===0){ 그리기(); 말("일부를 못 읽었습니다"); } };
+    img.src = URL.createObjectURL(f);
+  });
+}
+
+var 공유단추 = $("공유단추"), 멈춤단추 = $("멈춤단추"), 공유딱지 = $("공유딱지");
+var 됨 = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+if(됨){ 공유딱지.textContent="이 기기 가능"; 공유딱지.className="딱지 ok"; }
+else{
+  공유딱지.textContent="이 기기 불가"; 공유딱지.className="딱지 no";
+  공유단추.disabled = true;
+  공유단추.title = "이 브라우저는 화면 보기를 지원하지 않습니다. 사진을 올려 주세요.";
+}
+
+공유단추.onclick = function(){
+  navigator.mediaDevices.getDisplayMedia({video:{frameRate:2}, audio:false})
+  .then(function(흐름){
+    공유흐름 = 흐름;
+    var v = $("영상");
+    v.srcObject = 흐름;
+    return v.play().then(function(){ return v; });
+  })
+  .then(function(v){
+    공유단추.disabled = true; 멈춤단추.disabled = false;
+    말("보는 중 … 영상을 재생하세요");
+    공유흐름.getVideoTracks()[0].onended = 멈추기;
+    var 초 = Math.max(0.5, parseFloat($("간격").value)||1.5);
+    반복 = setInterval(function(){
+      if(!v.videoWidth) return;
+      var c = document.createElement("canvas");
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      c.getContext("2d").drawImage(v, 0, 0);
+      if(장면.length >= 200){ 멈추기(); 말("200장이 찼습니다. 저장하고 다시 시작하세요"); return; }
+      담기(c, true);
+    }, 초*1000);
+  })
+  .catch(function(e){ 말("화면 보기를 시작하지 못했습니다 — " + (e.message||e.name)); });
+};
+
+function 멈추기(){
+  if(반복){ clearInterval(반복); 반복=null; }
+  if(공유흐름){ 공유흐름.getTracks().forEach(function(t){t.stop();}); 공유흐름=null; }
+  공유단추.disabled = !됨; 멈춤단추.disabled = true;
+  말(지금()+"  멈췄습니다");
+}
+멈춤단추.onclick = 멈추기;
+
+var 고르개=$("고르개"), 본보기=$("본보기"), 네모=$("네모"), 무대=$("무대");
+var 끌기=null, 끄는중=false;
+
+$("크롭단추").onclick = function(){
+  if(!장면.length){ 말("먼저 장면을 모으세요"); return; }
+  본보기.src = 장면[0].캔.toDataURL("image/jpeg", 0.8);
+  네모.style.display="none"; 끌기=null;
+  고르개.classList.add("열림");
+};
+$("크롭취소").onclick = function(){ 고르개.classList.remove("열림"); };
+$("크롭풀기").onclick = function(){
+  자를자리=null; $("크롭글").textContent="아직 안 정했습니다"; 그리기();
+};
+
+function 점(e){
+  var r = 본보기.getBoundingClientRect();
+  var t = e.touches ? e.touches[0] : e;
+  return { x: Math.min(Math.max(t.clientX-r.left,0), r.width),
+           y: Math.min(Math.max(t.clientY-r.top ,0), r.height), r:r };
+}
+function 시작(e){ e.preventDefault(); 끄는중=true; var p=점(e); 끌기={x1:p.x,y1:p.y,x2:p.x,y2:p.y}; 보이기(); }
+/* ⚠️ 끄는중 을 안 보면 손을 뗀 뒤에도 네모가 마우스를 따라다닌다.
+   「이 자리로 자르기」 단추로 가는 동안 네모가 끌려가 엉뚱한 자리로 잘린다 (11-04 실측).
+   폰·태블릿은 손을 떼면 touchmove 가 멈춰서 드러나지 않았다. PC 에서만 났다. */
+function 중(e){ if(!끄는중 || !끌기) return; e.preventDefault(); var p=점(e); 끌기.x2=p.x; 끌기.y2=p.y; 보이기(); }
+function 끝(e){ if(끄는중){ 끄는중=false; if(끌기) e.preventDefault(); } }
+function 보이기(){
+  if(!끌기) return;
+  var 오 = 본보기.offsetLeft, 위 = 본보기.offsetTop;
+  var x=Math.min(끌기.x1,끌기.x2), y=Math.min(끌기.y1,끌기.y2);
+  var w=Math.abs(끌기.x2-끌기.x1), h=Math.abs(끌기.y2-끌기.y1);
+  네모.style.display="block";
+  네모.style.left=(오+x)+"px"; 네모.style.top=(위+y)+"px";
+  네모.style.width=w+"px"; 네모.style.height=h+"px";
+}
+무대.addEventListener("mousedown",시작); 무대.addEventListener("touchstart",시작,{passive:false});
+window.addEventListener("mousemove",중); 무대.addEventListener("touchmove",중,{passive:false});
+window.addEventListener("mouseup",끝);   무대.addEventListener("touchend",끝,{passive:false});
+
+$("크롭확인").onclick = function(){
+  if(!끌기){ 고르개.classList.remove("열림"); return; }
+  var r = 본보기.getBoundingClientRect();
+  var x=Math.min(끌기.x1,끌기.x2)/r.width, y=Math.min(끌기.y1,끌기.y2)/r.height;
+  var w=Math.abs(끌기.x2-끌기.x1)/r.width, h=Math.abs(끌기.y2-끌기.y1)/r.height;
+  if(w<0.03||h<0.03){ 고르개.classList.remove("열림"); 말("네모가 너무 작습니다"); return; }
+  자를자리 = {x:x,y:y,w:w,h:h};
+  $("크롭글").textContent = "정했습니다 (" + Math.round(w*100) + "% × " + Math.round(h*100) + "%)";
+  고르개.classList.remove("열림");
+  그리기();
+};
+
+function base64를바이트(b64){
+  var s = atob(b64), n = s.length, a = new Uint8Array(n);
+  for(var i=0;i<n;i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+function PDF만들기(장들){
+  var enc = new TextEncoder();
+  var 덩어리 = [], 길이 = 0, 자리 = [];
+  function 쓰기(x){
+    var b = (typeof x === "string") ? enc.encode(x) : x;
+    덩어리.push(b); 길이 += b.length;
+  }
+  function 객체(번호, 몸, 보너스){
+    자리[번호] = 길이;
+    쓰기(번호 + " 0 obj\n" + 몸 + "\n");
+    if(보너스){ 쓰기(보너스); 쓰기("\nendstream\n"); }
+    쓰기("endobj\n");
+  }
+
+  var 수 = 장들.length;
+  var 총 = 2 + 수*3;
+  쓰기("%PDF-1.4\n");
+  쓰기(new Uint8Array([0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));
+
+  var 쪽번호 = [];
+  for(var i=0;i<수;i++) 쪽번호.push((3 + i*3) + " 0 R");
+
+  객체(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  객체(2, "<< /Type /Pages /Count " + 수 + " /Kids [" + 쪽번호.join(" ") + "] >>");
+
+  for(var k=0;k<수;k++){
+    var 캔 = 장들[k];
+    var dataurl = 캔.toDataURL("image/jpeg", 0.82);
+    var 바이트 = base64를바이트(dataurl.split(",")[1]);
+    var w = 캔.width, h = 캔.height;
+    var pw = (w/150*72).toFixed(2), ph = (h/150*72).toFixed(2);
+    var 쪽 = 3 + k*3, 내용 = 쪽+1, 그림 = 쪽+2;
+
+    객체(쪽, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pw+" "+ph+"] "
+            + "/Resources << /XObject << /I0 "+그림+" 0 R >> >> /Contents "+내용+" 0 R >>");
+
+    var 명령 = "q " + pw + " 0 0 " + ph + " 0 0 cm /I0 Do Q";
+    객체(내용, "<< /Length " + 명령.length + " >>\nstream", 명령);
+
+    자리[그림] = 길이;
+    쓰기(그림 + " 0 obj\n<< /Type /XObject /Subtype /Image /Width "+w+" /Height "+h
+        + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "
+        + 바이트.length + " >>\nstream\n");
+    쓰기(바이트);
+    쓰기("\nendstream\nendobj\n");
+  }
+
+  var xref = 길이;
+  var 표 = "xref\n0 " + (총+1) + "\n0000000000 65535 f \n";
+  for(var n=1;n<=총;n++){
+    표 += ("0000000000" + (자리[n]||0)).slice(-10) + " 00000 n \n";
+  }
+  쓰기(표);
+  쓰기("trailer\n<< /Size " + (총+1) + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+
+  var 전체 = new Uint8Array(길이), 자 = 0;
+  덩어리.forEach(function(b){ 전체.set(b, 자); 자 += b.length; });
+  return new Blob([전체], {type:"application/pdf"});
+}
+
+$("저장단추").onclick = function(){
+  if(!장면.length){ 말("아직 모은 장면이 없습니다"); return; }
+  말("PDF를 만드는 중 …");
+  setTimeout(function(){
+    try{
+      var 장들 = 장면.map(function(s){ return 자른캔(s.캔); });
+      var blob = PDF만들기(장들);
+      var d = new Date();
+      var 이름 = "악보_" + ("0"+(d.getMonth()+1)).slice(-2) + ("0"+d.getDate()).slice(-2)
+               + "_" + ("0"+d.getHours()).slice(-2) + ("0"+d.getMinutes()).slice(-2) + ".pdf";
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = 이름;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+      말(장들.length + "장을 " + 이름 + " 로 저장했습니다");
+    }catch(e){
+      말("PDF를 만들지 못했습니다 — " + (e.message||e));
+    }
+  }, 30);
+};
+
+$("비우기").onclick = function(){
+  if(!장면.length) return;
+  장면 = []; 앞작은 = null; 그리기(); 말("비웠습니다");
+};
+
+그리기();
+})();
+</script>
+
+</body></html>
